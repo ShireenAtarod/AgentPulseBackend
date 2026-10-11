@@ -1,0 +1,60 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PUBLISHED_PORT:-8000}:8000"
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live').read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: agentpulse
+      POSTGRES_PASSWORD: agentpulse_dev_password
+      POSTGRES_DB: agentpulse
+    volumes:
+      - postgres18_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentpulse -d agentpulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  simulator:
+    build: .
+    profiles: ["simulator"]
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["python", "-m", "app.simulator"]
+
+volumes:
+  postgres18_data:
+  redis_data:
+

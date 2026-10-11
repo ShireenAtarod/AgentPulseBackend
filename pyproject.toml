@@ -1,0 +1,48 @@
+[project]
+name = "agentpulse-backend"
+version = "0.1.0"
+description = "FastAPI backend for the AgentPulse frontend learning project"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "alembic==1.20.0",
+  "fastapi[standard]==0.119.0",
+  "psycopg[binary]==3.2.10",
+  "pydantic-settings==2.11.0",
+  "pwdlib[argon2]==0.3.0",
+  "redis==7.0.1",
+  "SQLAlchemy==2.1.4",
+  "structlog==25.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "fakeredis==2.32.0",
+  "httpx==0.28.1",
+  "pytest==8.4.2",
+  "pytest-cov==7.0.0",
+  "ruff==0.14.1",
+]
+
+[project.scripts]
+agentpulse = "app.cli:main"
+
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008", "UP017"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+
